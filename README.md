@@ -14,7 +14,7 @@ Use
 Add the plugin to your rebar config:
 
     {plugins, [
-        { rebar3_coverme, ".*", {git, "git://github.com/evilbluebeaver/rebar3_coverme.git", {tag, "0.1.1"}}}
+        { rebar3_coverme, ".*", {git, "git://github.com/evilbluebeaver/rebar3_coverme.git", {tag, "0.1.2"}}}
     ]}.
 
 Then just call your plugin directly in an existing application:
