@@ -51,14 +51,18 @@ analyze(Modules) ->
                           end, #{}, Modules),
     {result, Coverage, _Errors} = cover:analyze(Modules, coverage, line),
     ModuleFun = fun({{Module, Line}, CoverResult}, CoverageAcc) ->
-              UpdateFun = fun({Covered, Uncovered}) ->
-                                  case CoverResult of
-                                      {1, 0} ->
-                                          {[Line | Covered], Uncovered};
-                                      {0, 1} ->
-                                          {Covered, [Line | Uncovered]}
-                                  end
-                          end,
-              maps:update_with(Module, UpdateFun, {[], []}, CoverageAcc)
-          end,
-    lists:foldl(ModuleFun, Default, Coverage).
+                        UpdateFun = fun({Covered, Uncovered}) ->
+                                            case CoverResult of
+                                                {1, 0} ->
+                                                    {[Line | Covered], Uncovered};
+                                                {0, 1} ->
+                                                    {Covered, [Line | Uncovered]}
+                                            end
+                                    end,
+                        maps:update_with(Module, UpdateFun, {[], []}, CoverageAcc)
+                end,
+    SortFun = fun(_, {Covered, Uncovered}) ->
+                      {lists:sort(Covered), lists:sort(Uncovered)}
+              end,
+    maps:map(SortFun, lists:foldl(ModuleFun, Default, Coverage)).
+
