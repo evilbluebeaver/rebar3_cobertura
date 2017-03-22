@@ -28,8 +28,10 @@ Then just call your plugin directly in an existing application:
 Configuration
 -------------
 There is a 'verbose' option available
+
     $ rebar3 coverme --verbose
 
 It can also be set in rebar.config
+
     {coverme_opts, [verbose]}
 
