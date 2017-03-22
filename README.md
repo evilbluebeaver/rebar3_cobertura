@@ -17,7 +17,7 @@ Add the plugin to your rebar config:
         { rebar3_coverme, ".*", {git, "git://github.com/evilbluebeaver/rebar3_coverme.git", {tag, "0.1.3"}}}
     ]}.
 
-Then just call your plugin directly in an existing application:
+Then just call a plugin directly:
 
 
     $ rebar3 coverme
