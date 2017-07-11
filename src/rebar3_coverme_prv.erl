@@ -33,8 +33,7 @@ do(State) ->
     ExclApps = excl_apps(State),
     ExclMods = excl_mods(State),
     Verbose = verbose(State),
-    CoverApps = Apps -- ExclApps,
-    case generate(InputFiles, OutputFile, CoverApps, ExclMods, Verbose) of
+    case generate(InputFiles, OutputFile, Apps, ExclApps, ExclMods, Verbose) of
         ok ->
             {ok, State};
         Error ->
@@ -74,15 +73,15 @@ file_exists(Filename) ->
             exit(Reason)
     end.
 
-generate([], _, _, _, _) ->
+generate([], _, _, _, _, _) ->
     rebar_api:warn("No coverdata found", []),
     ok;
 
-generate(InputFiles, OutputFile, Apps, ExclMods, Verbose) ->
+generate(InputFiles, OutputFile, Apps, ExclApps, ExclMods, Verbose) ->
     rebar_api:info("Performing cover analysis...", []),
     case rebar3_coverage:init(InputFiles, "_build/test/covertool.log") of
         {ok, F} ->
-            Coverage = generate_apps(Apps, ExclMods),
+            Coverage = generate_apps(Apps, ExclApps, ExclMods),
             OutputCoverage = output_coverage(Coverage),
             ok = file:write_file(OutputFile, OutputCoverage),
             print_analysis(Verbose, Coverage),
@@ -92,23 +91,29 @@ generate(InputFiles, OutputFile, Apps, ExclMods, Verbose) ->
             Otherwise
     end.
 
-generate_apps(Apps, ExclMods) ->
-    {ExclMods, Coverage} = lists:foldl(fun generate_app/2, {ExclMods, #{}}, Apps),
+generate_apps(Apps, ExclApps, ExclMods) ->
+    {ExclApps, ExclMods, Coverage} = lists:foldl(fun generate_app/2, {ExclApps, ExclMods, #{}}, Apps),
     Coverage.
 
-generate_app(App, {ExclMods, Result}) ->
-    %AppName = binary_to_atom(rebar_app_info:name(App), latin1),
-    SourceDir = filename:join(rebar_app_info:dir(App), "src/"),
-    SourceFiles = filelib:wildcard(SourceDir ++ "/**/*.erl"),
-    Modules = modules(SourceFiles),
-    CoverModules = maps:keys(Modules) -- ExclMods,
-    %rebar_api:info("Analyzing ~p", [AppName]),
-    Coverage = rebar3_coverage:analyze(CoverModules),
-    Fun = fun(Module, {CoveredLines, UncoveredLines}, Acc) ->
-                  File = maps:get(Module, Modules),
-                  maps:put(Module, {File, CoveredLines, UncoveredLines}, Acc)
-          end,
-    {ExclMods, maps:fold(Fun, Result, Coverage)}.
+generate_app(App, {ExclApps, ExclMods, Result}) ->
+    AppName = rebar_app_info:name(App),
+    case lists:member(AppName, ExclApps) of
+        false ->
+            %AppName = binary_to_atom(rebar_app_info:name(App), latin1),
+            SourceDir = filename:join(rebar_app_info:dir(App), "src/"),
+            SourceFiles = filelib:wildcard(SourceDir ++ "/**/*.erl"),
+            Modules = modules(SourceFiles),
+            CoverModules = maps:keys(Modules) -- ExclMods,
+            %rebar_api:info("Analyzing ~p", [AppName]),
+            Coverage = rebar3_coverage:analyze(CoverModules),
+            Fun = fun(Module, {CoveredLines, UncoveredLines}, Acc) ->
+                          File = maps:get(Module, Modules),
+                          maps:put(Module, {File, CoveredLines, UncoveredLines}, Acc)
+                  end,
+            {ExclApps, ExclMods, maps:fold(Fun, Result, Coverage)};
+        true ->
+            {ExclApps, ExclMods, Result}
+    end.
 
 print_summary(Verbose, InputFiles, OutputFile) ->
     VerboseSummary = case Verbose of
