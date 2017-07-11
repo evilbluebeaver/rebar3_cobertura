@@ -93,7 +93,8 @@ generate(InputFiles, OutputFile, Apps, ExclMods, Verbose) ->
     end.
 
 generate_apps(Apps, ExclMods) ->
-    lists:foldl(fun generate_app/2, {ExclMods, #{}}, Apps).
+    {ExclMods, Coverage} = lists:foldl(fun generate_app/2, {ExclMods, #{}}, Apps),
+    Coverage.
 
 generate_app(App, {ExclMods, Result}) ->
     %AppName = binary_to_atom(rebar_app_info:name(App), latin1),
