@@ -96,7 +96,7 @@ generate_apps(Apps, ExclApps, ExclMods) ->
     Coverage.
 
 generate_app(App, {ExclApps, ExclMods, Result}) ->
-    AppName = rebar_app_info:name(App),
+    AppName = binary_to_atom(rebar_app_info:name(App), utf8),
     case lists:member(AppName, ExclApps) of
         false ->
             %AppName = binary_to_atom(rebar_app_info:name(App), latin1),
