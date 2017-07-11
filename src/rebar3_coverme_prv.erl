@@ -30,8 +30,11 @@ do(State) ->
     InputFiles = input_files(CoverDir),
     OutputFile = output_file(CoverDir),
     Apps = rebar_state:project_apps(State),
+    ExclApps = excl_apps(State),
+    ExclMods = excl_mods(State),
     Verbose = verbose(State),
-    case generate(InputFiles, OutputFile, Apps, Verbose) of
+    CoverApps = Apps - ExclApps,
+    case generate(InputFiles, OutputFile, CoverApps, ExclMods, Verbose) of
         ok ->
             {ok, State};
         Error ->
@@ -71,15 +74,15 @@ file_exists(Filename) ->
             exit(Reason)
     end.
 
-generate([], _, _, _) ->
+generate([], _, _, _, _) ->
     rebar_api:warn("No coverdata found", []),
     ok;
 
-generate(InputFiles, OutputFile, Apps, Verbose) ->
+generate(InputFiles, OutputFile, Apps, ExclMods, Verbose) ->
     rebar_api:info("Performing cover analysis...", []),
     case rebar3_coverage:init(InputFiles, "_build/test/covertool.log") of
         {ok, F} ->
-            Coverage = generate_apps(Apps),
+            Coverage = generate_apps(Apps, ExclMods),
             OutputCoverage = output_coverage(Coverage),
             ok = file:write_file(OutputFile, OutputCoverage),
             print_analysis(Verbose, Coverage),
@@ -89,21 +92,22 @@ generate(InputFiles, OutputFile, Apps, Verbose) ->
             Otherwise
     end.
 
-generate_apps(Apps) ->
-    lists:foldl(fun generate_app/2, #{}, Apps).
+generate_apps(Apps, ExclMods) ->
+    lists:foldl(fun generate_app/2, {ExclMods, #{}}, Apps).
 
-generate_app(App, Result) ->
+generate_app(App, {ExclMods, Result}) ->
     %AppName = binary_to_atom(rebar_app_info:name(App), latin1),
     SourceDir = filename:join(rebar_app_info:dir(App), "src/"),
     SourceFiles = filelib:wildcard(SourceDir ++ "/**/*.erl"),
     Modules = modules(SourceFiles),
+    CoverModules = maps:keys(Modules) -- ExclMods,
     %rebar_api:info("Analyzing ~p", [AppName]),
-    Coverage = rebar3_coverage:analyze(maps:keys(Modules)),
+    Coverage = rebar3_coverage:analyze(CoverModules),
     Fun = fun(Module, {CoveredLines, UncoveredLines}, Acc) ->
                   File = maps:get(Module, Modules),
                   maps:put(Module, {File, CoveredLines, UncoveredLines}, Acc)
           end,
-    maps:fold(Fun, Result, Coverage).
+    {ExclMods, maps:fold(Fun, Result, Coverage)}.
 
 print_summary(Verbose, InputFiles, OutputFile) ->
     VerboseSummary = case Verbose of
@@ -205,6 +209,12 @@ command_line_opts(State) ->
 
 config_opts(State) ->
     rebar_state:get(State, coverme_opts, []).
+
+excl_mods(State) ->
+    proplists:get_value(excl_mods, config_opts(State), []).
+
+excl_apps(State) ->
+    proplists:get_value(excl_apps, config_opts(State), []).
 
 verbose(State) ->
     Command = proplists:get_value(verbose, command_line_opts(State), undefined),
