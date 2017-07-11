@@ -33,7 +33,7 @@ do(State) ->
     ExclApps = excl_apps(State),
     ExclMods = excl_mods(State),
     Verbose = verbose(State),
-    CoverApps = Apps - ExclApps,
+    CoverApps = Apps -- ExclApps,
     case generate(InputFiles, OutputFile, CoverApps, ExclMods, Verbose) of
         ok ->
             {ok, State};
