@@ -6,3 +6,4 @@
 init(State) ->
     {ok, State1} = rebar3_coverme_prv:init(State),
     {ok, State1}.
+
