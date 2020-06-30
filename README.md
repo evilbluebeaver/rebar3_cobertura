@@ -1,7 +1,7 @@
-rebar3_coverme
+rebar3_cobertura
 =====
 
-A rebar plugin for generating a coverage report for a vim-coverme plugin (https://github.com/evilbluebeaver/vim-coverme)
+A rebar plugin for generating a cobertura coverage report
 
 Build
 -----
@@ -14,24 +14,24 @@ Use
 Add the plugin to your rebar config:
 
     {plugins, [
-        { rebar3_coverme, ".*", {git, "git://github.com/evilbluebeaver/rebar3_coverme.git", {tag, "0.1.3"}}}
+        { rebar3_cobertura, ".*", {git, "git://github.com/evilbluebeaver/rebar3_cobertura.git", {tag, "0.2.0"}}}
     ]}.
 
 Then just call a plugin directly:
 
 
-    $ rebar3 coverme
-    ===> Fetching rebar3_coverme
-    ===> Compiling rebar3_coverme
+    $ rebar3 cobertura
+    ===> Fetching rebar3_cobertura
+    ===> Compiling rebar3_cobertura
     <Plugin Output>
 
 Configuration
 -------------
 There is a 'verbose' option available
 
-    $ rebar3 coverme --verbose
+    $ rebar3 rebar3_cobertura --verbose
 
 It can also be set in rebar.config
 
-    {coverme_opts, [verbose]}
+    {cobertura_opts, [verbose]}
 
