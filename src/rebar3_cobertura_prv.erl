@@ -1,8 +1,8 @@
--module(rebar3_coverme_prv).
+-module(rebar3_cobertura_prv).
 
 -export([init/1, do/1, format_error/1]).
 
--define(PROVIDER, coverme).
+-define(PROVIDER, cobertura).
 -define(DEPS, [lock, app_discovery]).
 
 %% ===================================================================
@@ -14,13 +14,13 @@ init(State) ->
                        {module, ?MODULE},            % The module implementation of the task
                        {bare, true},                 % The task can be run by the user, always true
                        {deps, ?DEPS},                % The list of dependencies
-                       {example, "rebar3 coverme"},  % How to use the plugin
-                       {opts, coverme_opts(State)},  % list of options understood by the plugin
-                       {short_desc, "generate coverme report"},
+                       {example, "rebar3 cobertura"},  % How to use the plugin
+                       {opts, cobertura_opts(State)},  % list of options understood by the plugin
+                       {short_desc, "generate cobertura coverage report"},
                        {profiles, [test]},
                        {desc,
-                        "Process the .coverdata file and produce a compact representation "
-                        "of covered ann uncovered lines"}],
+                        "Process the cover log file and produce a cobertura-compatible xml"
+                        }],
     Provider = providers:create(ProviderOptions),
     {ok, rebar_state:add_provider(State, Provider)}.
 
@@ -249,7 +249,7 @@ modules(SourceDir, Filenames, Excludes) ->
           end,
     lists:foldl(Fun, #{}, Filenames).
 
-coverme_opts(_State) ->
+cobertura_opts(_State) ->
     [{verbose, $v, "verbose", boolean, help(verbose)}].
 
 help(verbose) ->
@@ -260,7 +260,7 @@ command_line_opts(State) ->
     Opts.
 
 config_opts(State) ->
-    rebar_state:get(State, coverme_opts, []).
+    rebar_state:get(State, cobertura_opts, []).
 
 excl_mods(State) ->
     proplists:get_value(excl_mods, config_opts(State), []).
