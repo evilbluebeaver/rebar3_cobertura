@@ -1,6 +1,6 @@
 {application, rebar3_cobertura,
- [{description, "A rebar plugin"},
-  {vsn, "0.2.1"},
+ [{description, "A rebar plugin for generating a cobertura coverage report"},
+  {vsn, "0.3.1"},
   {registered, []},
   {applications,
    [kernel,
